@@ -28,3 +28,5 @@ ___________________________________
 - Bilateral Segmentation Network: https://arxiv.org/pdf/1808.00897v1.pdf
 - ExFuse: http://openaccess.thecvf.com/content_ECCV_2018/papers/Zhenli_Zhang_ExFuse_Enhancing_Feature_ECCV_2018_paper.pdf
 
+#### Deep Reinforcement Learning
+- Memory-based Deep Reinforcement Learning for Obstacle Avoidance in UAV with Limited Environment Knowledge: https://arxiv.org/abs/1811.03307
