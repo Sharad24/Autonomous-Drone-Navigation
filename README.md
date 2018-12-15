@@ -30,3 +30,12 @@ ___________________________________
 
 #### Deep Reinforcement Learning
 - Memory-based Deep Reinforcement Learning for Obstacle Avoidance in UAV with Limited Environment Knowledge: https://arxiv.org/abs/1811.03307
+
+
+_____________________________________________________________
+
+Collaborators:
+
+- [Souradeep Chakraborty](https://github.com/sauradefy99)
+- [Kartik Bhatia](https://github.com/bhatiakartik10)
+
