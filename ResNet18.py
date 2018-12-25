@@ -9,9 +9,23 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 get_ipython().run_line_magic('matplotlib', 'inline')
 DEFAULT_DTYPE = tf.float32
+CASTABLE_TYPES = (tf.float16,)
+ALLOWED_TYPES = (DEFAULT_DTYPE,) + CASTABLE_TYPES
 
 
 # In[2]:
+
+def projection_shortcut(inputs,filters):
+    '''
+    Downsampling the shortcut using 1x1 conv
+    
+    Args:
+    inputs: A tensor of size [batch, height_in, width_in, channels]
+    filters: Number of filters for the convolutions.
+    '''
+    return tf.layers.conv2d(inputs, filters, kernel_size=[1,1], strides=[2,2], 
+                              padding='VALID',use_bias=False, 
+                              kernel_initializer= tf.variance_scaling_initializer())
 
 
 def block(inputs,filters=64,strides=1):
@@ -25,21 +39,22 @@ def block(inputs,filters=64,strides=1):
     """
     shortcut = inputs
     
-    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[1,strides,strides,1], 
+    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[strides,strides], 
                               padding='SAME',use_bias=False, 
-                              kernel_initializer= tf.variance_scaling_initializer(factor=1.0, mode='FAN_IN'))
+                              kernel_initializer= tf.variance_scaling_initializer())
     
-    inputs = tf.nn.selu(inputs)
+    inputs = tf.nn.relu(inputs)
     
-    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[1,strides,strides,1], 
+    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[strides,strides], 
                               padding='SAME',use_bias=False, 
-                              kernel_initializer= tf.variance_scaling_initializer(factor=1.0, mode='FAN_IN'))
+                              kernel_initializer= tf.variance_scaling_initializer())
     
     
-    
+    #print('shortcut' + str(shortcut.shape))
+    #print('inputs' + str(inputs.shape))
     inputs += shortcut
     
-    inputs = tf.nn.selu(inputs)
+    inputs = tf.nn.relu(inputs)
     
     return inputs
 
@@ -49,7 +64,7 @@ def block(inputs,filters=64,strides=1):
 
 def block_down_sample(inputs,filters,strides=1):
     """
-    Block 2 of Resnet 18
+    Downsampling Block of Resnet 18
     
     Args:
     inputs: A tensor of size [batch, height_in, width_in, channels]
@@ -58,19 +73,24 @@ def block_down_sample(inputs,filters,strides=1):
     """
     shortcut = inputs
     
-    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[1,strides,strides,1], 
-                              padding='SAME',use_bias=False, 
-                              kernel_initializer= tf.variance_scaling_initializer(factor=1.0, mode='FAN_IN'))
+    shortcut = projection_shortcut(shortcut,filters)
     
-    inputs = tf.nn.selu(inputs)
-    
-    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[1,2,2,1], 
+    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[strides,strides], 
                               padding='SAME',use_bias=False, 
-                              kernel_initializer= tf.variance_scaling_initializer(factor=1.0, mode='FAN_IN'))
+                              kernel_initializer= tf.variance_scaling_initializer())
+    
+    inputs = tf.nn.relu(inputs)
+    
+    inputs = tf.layers.conv2d(inputs, filters, kernel_size=[3,3], strides=[2,2], 
+                              padding='SAME',use_bias=False, 
+                              kernel_initializer= tf.variance_scaling_initializer())
+    
+    #print('shortcut' + str(shortcut.shape))
+    #print('inputs' + str(inputs.shape))
     
     inputs += shortcut
     
-    inputs = tf.nn.selu(inputs)
+    inputs = tf.nn.relu(inputs)
     
     return inputs
 
@@ -127,7 +147,7 @@ class Model(object):
     return tf.variable_scope('resnet_model',
                              custom_getter=self._custom_dtype_getter)
 
-  def __call__(self, inputs, training):
+  def __call__(self, inputs):
     """Add operations to classify a batch of input images.
     Args:
       inputs: A Tensor representing a batch of input images.
@@ -138,30 +158,38 @@ class Model(object):
     """
 
     with self._model_variable_scope():
-      if self.data_format == 'channels_last':
+      '''
+        if self.data_format == 'channels_last':
         # Convert the inputs from channels_last (NHWC) to channels_first (NCHW).
         # This provides a large performance boost on GPU. See
         # https://www.tensorflow.org/performance/performance_guide#data_formats
         inputs = tf.transpose(inputs, [0, 3, 1, 2])
-
-      inputs = tf.layers.conv2d(inputs, 64, kernel_size=[7,7], strides=[1,2,2,1], 
-                              padding='SAME',use_bias=False, 
-                              kernel_initializer= tf.variance_scaling_initializer(factor=1.0, mode='FAN_IN'))
+        '''
+      inputs = tf.layers.conv2d(inputs, 64, kernel_size=[7,7], strides=[2,2], 
+                              padding='VALID',use_bias=False, 
+                              kernel_initializer= tf.variance_scaling_initializer())
       inputs = tf.identity(inputs, 'initial_conv')
+      #print('after initial conv' + str(inputs.shape))
 
-      inputs = tf.nn.selu(inputs)
+      inputs = tf.nn.relu(inputs)
 
-      inputs = tf.layers.max_pooling2d( inputs=inputs, pool_size=[3,3], strides=[1,2,2,1], padding='SAME')
+      inputs = tf.layers.max_pooling2d( inputs=inputs, pool_size=[3,3], strides=[2,2], padding='VALID')
       inputs = tf.identity(inputs, 'initial_max_pool')
+      #print('after initial maxpool' + str(inputs.shape))
         
       inputs = block(inputs)
       inputs = tf.identity(inputs,'conv1a')
+      #print('after conv1a' + str(inputs.shape))
       inputs = block(inputs)
       inputs = tf.identity(inputs,'conv1b')
+      #print('after conv1b' + str(inputs.shape))
+   
       
       for i in range(3):
         inputs = block_down_sample(inputs, 2**(i+7))
+        #print('after block{}downsample'.format(i+2) + str(inputs.shape)) 
         inputs = block(inputs,2**(i+7))
+        #print('after block{}'.format(i+2) + str(inputs.shape))
         inputs = tf.identity(inputs,'conv{}'.format(i+2))
 
       # The current top layer has shape
@@ -169,11 +197,13 @@ class Model(object):
       # ResNet does an Average Pooling layer over pool_size,
       # but that is the same as doing a reduce_mean. We do a reduce_mean
       # here because it performs better than AveragePooling2D.
-      axes = [2, 3] if self.data_format == 'channels_first' else [1, 2]
+      axes = [1, 2]
       inputs = tf.reduce_mean(inputs, axes, keepdims=True)
       inputs = tf.identity(inputs, 'final_reduce_mean')
+      #print('after reduce mean' + str(inputs.shape))
 
       inputs = tf.squeeze(inputs, axes)
+      #print('after squeeze' + str(inputs.shape))
       inputs = tf.layers.dense(inputs=inputs, units=self.num_classes)
       inputs = tf.identity(inputs, 'final_dense')
     return inputs
