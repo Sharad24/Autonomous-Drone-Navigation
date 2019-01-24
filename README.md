@@ -6,8 +6,8 @@ ___________________________________
 ### Timeline
 - [x] Order of materials required for drone and initial research
 - [x] Implementation of initial model (Nvidia TrailNet): https://arxiv.org/abs/1705.02550
-- [ ] Dec '18: Research on Semantic Segmentation and Deep Reinforcement Learning 
-- [ ] Jan '19: Implementation of models
+- [x ] Dec '18: Research on Semantic Segmentation and Deep Reinforcement Learning 
+- [x ] Jan '19: Implementation of models
 - [ ] Feb '19: Quark presentation
 
 ### Research Papers
