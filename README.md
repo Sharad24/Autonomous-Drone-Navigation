@@ -1,6 +1,6 @@
 # Autonomous-Drone-Navigation-using-Deep-Reinforcement-Learning
 
-The goal is to build an autonomous system capable of navigating areas(small scale) without the use of GPS technology. The inspiration of the project is taken from recent advances in Semantic Segmentation and Deep Reinforcement Learning which have proven to be very successful in the context of Autonomous Navigation in the case of cars. We aim to extend it to drones. Navigation of areas involves obstacle avoidance, decision based system to classify input camera feed for commands for navigation. We are currently using ROS for interfacing. We might switch to flytOS depending on it's capabilities which we still have to assess.
+The goal is to build an autonomous system capable of navigating areas(small scale) without the use of GPS technology. The inspiration of the project is taken from recent advances in Semantic Segmentation and Deep Reinforcement Learning which have proven to be very successful in the context of Autonomous Navigation in the case of cars. We aim to extend it to drones. Navigation of areas involves obstacle avoidance, decision based system to classify input camera feed for commands for navigation. We are currently using ROS for interfacing. 
 ___________________________________
 
 ### Timeline
@@ -8,7 +8,7 @@ ___________________________________
 - [x] Implementation of initial model (Nvidia TrailNet): https://arxiv.org/abs/1705.02550
 - [x] Dec '18: Research on Semantic Segmentation and Deep Reinforcement Learning 
 - [x] Jan '19: Implementation of models
-- [ ] Feb '19: Quark presentation
+- [x] Feb '19: Quark presentation
 
 ### Research Papers (Resources)
 #### Semantic Segmentation:
